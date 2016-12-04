@@ -1,11 +1,10 @@
 import numpy as np
 import math as mt
-import Image as im
+from PIL import Image as im
 from matplotlib import pyplot as plt
 import numpy.fft as fft
 
-def read_im(name="/home/phil/clock.jpg"):
-    import Image as im
+def read_im(name="../img/clock.jpg"):
     raw_image = im.open(name)
     image = np.array(raw_image)
     new_image = np.empty(image.shape)
