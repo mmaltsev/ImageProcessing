@@ -1,3 +1,7 @@
+# Before start
+
+`pip install -r requirements.txt`
+
 # Image Processing
  Homeworks for B-IT lecture series on Image Processing, Retrieval, and Analysis.
 

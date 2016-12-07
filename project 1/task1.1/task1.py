@@ -1,9 +1,9 @@
 import numpy as np
 import math as mt
-import Image as im
+from PIL import Image as im
 from matplotlib import pyplot as plt
 
-raw_image = im.open("clock.jpg")
+raw_image = im.open("../img/clock.jpg")
 image = np.array(raw_image)
 new_image = np.empty([image[:][0].size, image[0][:].size])
 w = image[0][:].size

@@ -1,11 +1,13 @@
 import numpy as np
 import math
-import Image as im
 from matplotlib import pyplot as plt
 import numpy.fft as fft
 from pylab import imshow
-def read_im(name="/home/phil/clock.jpg"):
-    import Image as im
+from PIL import Image as im
+from matplotlib import pyplot as plt
+import numpy.fft as fft
+
+def read_im(name="../img/clock.jpg"):
     raw_image = im.open(name)
     image = np.array(raw_image)
     new_image = np.empty(image.shape)
@@ -67,6 +69,7 @@ def main():
     plt.imshow(im_new2.real, 'gray')
 
     #plt.show()
+    plt.show()
 
 if __name__ == '__main__':
     main()
