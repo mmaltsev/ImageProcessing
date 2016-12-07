@@ -17,8 +17,8 @@ shifted2 = np.vectorize(log)(shifted)
 def norm_calc(i, j):
   return mt.sqrt(mt.pow((i - w/2), 2) + mt.pow((j - h/2), 2))
 
-r_min = 30
-r_max = 76
+r_min = 1
+r_max = 90
 w = image[0][:].size
 h = image[:][0].size
 bounded = np.empty([image[:][0].size, image[0][:].size])
@@ -27,7 +27,7 @@ for i in range(w):
     if (norm_calc(i,j) >= r_min and norm_calc(i,j) <= r_max):
       bounded[i][j] = shifted[i][j]
     else:
-      bounded[i][j] = 1
+      bounded[i][j] = 0
 
 bounded2 =  np.vectorize(log)(bounded)
 
