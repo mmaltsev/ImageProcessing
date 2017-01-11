@@ -42,7 +42,7 @@ def main(sigma = 0.5, photo ='phil'):
     yminus = image2.copy()
     yplus = image2.copy()
     y = np.zeros(image2.shape)
-    y.fill(255)
+    y.fill(255.0)
 
     for k in np.arange(h)+4:
         for n in np.arange(w)+4:
@@ -50,24 +50,40 @@ def main(sigma = 0.5, photo ='phil'):
             yminus[k,n] =sum([aminus[m] * image2[k,n+m] for m in range(1,5)]) -\
                     sum([bminus[m] * yminus[k,n+m] for m in range(1,5)])
             y[k,n] = (yminus[k,n] + yplus[k,n])/(sigma *math.sqrt(2*math.pi))
-
+    y1 = y.copy()
     for n in np.arange(w) + 4:
         for k in np.arange(h)+4:
             yplus[k,n] = sum([aplus[m] * y[k-m,n] for m in range(4)]) -sum([bplus[m] * yplus[k-m,n] for m in range(1,5)])
             yminus[k,n] =sum([aminus[m] * y[k+m,n] for m in range(1,5)]) -\
                     sum([bminus[m] * yminus[k+m,n] for m in range(1,5)])
-            y[k,n] = (yminus[k,n] + yplus[k,n])/(sigma *math.sqrt(2*math.pi))
+            y1[k,n] = (yminus[k,n] + yplus[k,n])/(sigma *math.sqrt(2*math.pi))
+    if False:
+        for n in np.arange(w) + 4:
+            for k in np.arange(h) + 4:
+                yplus[k, n] = sum([aplus[m] * y[k - m, n] for m in range(4)]) - sum(
+                    [bplus[m] * yplus[k - m, n] for m in range(1, 5)])
+                yminus[k, n] = sum([aminus[m] * y[k + m, n] for m in range(1, 5)]) - \
+                               sum([bminus[m] * yminus[k + m, n] for m in range(1, 5)])
+                y1[k, n] = (yminus[k, n] + yplus[k, n]) / (sigma * math.sqrt(2 * math.pi))
 
+        y1 = y.copy()
+        for k in np.arange(h) + 4:
+            for n in np.arange(w) + 4:
+                yplus[k, n] = sum([aplus[m] * y[k, n - m] for m in range(4)]) - sum(
+                    [bplus[m] * yplus[k, n - m] for m in range(1, 5)])
+                yminus[k, n] = sum([aminus[m] * y[k, n + m] for m in range(1, 5)]) - \
+                               sum([bminus[m] * yminus[k, n + m] for m in range(1, 5)])
+                y1[k, n] = (yminus[k, n] + yplus[k, n]) / (sigma * math.sqrt(2 * math.pi))
 
     import scipy.misc as msc
 
     im1 = msc.toimage(
-        y
+        y1
     )
     im1.show()
-    im1.save('task2.3/phil_sigma%s.jpg' % sigma)
+    im1.save('task2.3/%s_sigma%s.jpg' % (photo,sigma))
 
     if __name__ == '__main__':
-        for photo in ['bauckhage', 'phil']:
-            for s in np.arange(.5,1.5,0.2):
-                main(s, photo)
+        for photo in ['bauckhage', 'phil','clock']:
+            for s in [0.2,0.8,1.2]:
+                main(s, photo=photo)
