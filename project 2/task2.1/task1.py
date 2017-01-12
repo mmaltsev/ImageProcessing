@@ -4,6 +4,7 @@ import math as mt
 from PIL import Image as im
 from matplotlib import pyplot as plt
 import numpy.fft as fft
+import scipy.ndimage as img
 
 #sigma = 20
 #sigma = (n-1)/float(2*2.575)
@@ -28,7 +29,7 @@ def gridCompute(image,grid_w,grid_h,type):  # kernel grid computing
 			grid[center_w+i,center_h-j] = gaussian(i,j,sigma)
 			grid[center_w-i,center_h-j] = gaussian(i,j,sigma)
 	grid = grid/np.sum(grid)
-	return grid
+	return grid, sigma
 
 def multiplication(image,grid):
 	#-- Fourier transform of original image --#
@@ -61,7 +62,7 @@ def convolution(image,x,y,grid,type):
 def smooth(image,grid_w,grid_h,type):
 	image_w,image_h = image.shape
 	new_image = np.empty([image_w, image_h])
-	grid = gridCompute(image,grid_w,grid_h,type)
+	grid, sigma = gridCompute(image,grid_w,grid_h,type)
 	grid_w_offset = int(grid_w/2)
 	grid_h_offset = int(grid_h/2)
 	if type == 0 or type == 1:
@@ -73,19 +74,24 @@ def smooth(image,grid_w,grid_h,type):
 		#-- Computing log of the image for visualization --#
 		log = lambda t: np.log(np.absolute(t))
 		new_image = np.vectorize(log)(new_image)
+	elif type == 3:
+		new_image = img.filters.convolve(image,grid)
+	elif type == 4:
+		new_image = img.filters.gaussian_filter(image, sigma)  # sequence of one-dimensional convolution filters
 	else:
 		print 'error: unknown type'
 	return new_image
 
 def main(grid_w,grid_h,type):
 	print grid_w, grid_h, type
-	#-- types of blurring: 0 - naive conv., 1 - separable conv., 2 - multiplication in the frequency domain --#
-	#image = np.array(im.open("../img/bauckhage.jpg"))
-	image = np.array(im.open("../img/maltsev.jpg"))
+	#-- types of blurring: 0 - naive conv., 1 - separable conv., 2 - multiplication in the frequency domain, 3 - naive conv. (scipy), 1 - separable conv. (scipy) ---#
+	image = np.array(im.open("../img/bauckhage.jpg"))
+	#image = np.array(im.open("../img/maltsev.jpg"))
+	smooth(image,grid_w,grid_h,type)
 	#plt.imshow(smooth(image,grid_w,grid_h,type),'gray')  
-	plt.imshow(smooth(image[:,:,2],grid_w,grid_h,type),'gray')
-	plt.savefig('maltsev'+str(type)+'.jpg')
-	plt.show()
+	#plt.imshow(smooth(image[:,:,2],grid_w,grid_h,type),'gray')
+	#plt.savefig('maltsev'+str(type)+'.jpg')
+	#plt.show()
 	
 if __name__ == "__main__":
 	main(int(sys.argv[1]),int(sys.argv[2]),int(sys.argv[3])) # grid width, grid height and type of blurring from command line
