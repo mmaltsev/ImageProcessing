@@ -1,7 +1,7 @@
 import sys
 import numpy as np
 import math as mt
-	from PIL import Image as im
+from PIL import Image as im
 from matplotlib import pyplot as plt
 import numpy.fft as fft
 import scipy.ndimage as img
