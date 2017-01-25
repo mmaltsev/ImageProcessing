@@ -1,17 +1,38 @@
 import math
 import numpy as np
 from PIL import Image as im
-def main(sigma = 0.5, photo ='phil'):
-    alfa = [1.68, -0.68]
+#line = image[100,:]
+def causal(line, aplus,bplus):
+    yplus =  [0]*(len(line) + 4) #np.append(line[-4:], [0]*(len(line)))
+    line = np.append([0]*4,line)
+    for n in range(4, len(line)-1) : #for evidence
+        yplus[n] = sum([aplus[m] * line[n-m] for m in range(4)]) -sum([bplus[m] * yplus[n-m] for m in range(1,5)])
+    return yplus[:-4:]
+def anticausal(line, aminus, bminus):
+    yminus =np.append( [0] * (len(line)) , line[:4])
+    line =  np.append(line, [0] * 4)
+    for n in reversed(range(len(line)-4) ): #for evidence
+        yminus[n] = sum([aminus[m] * line[n + m] for m in range(1, 5)]) - \
+                sum([bminus[m] * yminus[n + m] for m in range(1, 5)])
+    return yminus[:-4:]
+
+def main(sigma = 2, photo ='phil'):
+    import time
+    startT=time.time()
+    alfa = [1.68, -0.6803]
     beta = [3.7350 , -0.2598 ]
     gamma = [1.7830 ,1.7230 ]
     omega = [0.6318, 1.9970]
     aplus = [0,0,0,0]
     aplus[0] = sum(alfa)
-    aplus[1] = math.exp(-gamma[1]/sigma )*(beta[1] * math.sin(omega[1]/sigma) -(alfa[1]+2*alfa[0])*math.cos(omega[1]/sigma)) + \
-             math.exp(-gamma[0]/sigma)*(beta[0]*math.sin(omega[0]/sigma) -(2*alfa[1] +alfa[0]))*math.cos(omega[0]/sigma)
+    aplus[1] = math.exp(-gamma[1]/sigma )*\
+               (beta[1] * math.sin(omega[1]/sigma) -(alfa[1]+2*alfa[0])*math.cos(omega[1]/sigma)) + \
+             np.exp(-gamma[0]/sigma)*(beta[0]*np.sin(omega[0]/sigma) -(2*alfa[1] +alfa[0])*np.cos(omega[0]/sigma))
 
-    aplus[2] = 2*math.exp(-sum(gamma) / sigma)*(sum(alfa)*math.cos(omega[1]/sigma)*math.cos(omega[0]/sigma) -math.cos(omega[1]/sigma) * beta[0]*math.sin(omega[1]/sigma) - math.cos(omega[0]/sigma) * beta[1]*math.sin(omega[1]/sigma)) + \
+    aplus[2] = 2*math.exp(-sum(gamma) / sigma)\
+               *( sum(alfa)*math.cos(omega[1]/sigma)*math.cos(omega[0]/sigma) -\
+                  math.cos(omega[1]/sigma) * beta[0]*math.sin(omega[0]/sigma) -\
+                  math.cos(omega[0]/sigma) * beta[1]*math.sin(omega[1]/sigma)) + \
              alfa[1] * math.exp(-2*gamma[0]/sigma) + alfa[0] *math.exp(-2*gamma[1]/sigma)
     aplus[3] = math.exp(-(gamma[1]+ 2* gamma[0])/sigma) * (beta[1]*math.sin(omega[1]/sigma) - alfa[1]*math.cos(omega[1]/sigma)) + \
              math.exp(-(gamma[0] + 2 * gamma[1]) / sigma) * (beta[0] * math.sin(omega[0] / sigma) - alfa[0] * math.cos(omega[0] / sigma))
@@ -33,57 +54,33 @@ def main(sigma = 0.5, photo ='phil'):
     aminus[3] = aplus[3] - bplus[3]*aplus[0]
     aminus[4] = -bplus[4]*aplus[0]
 
-    image = np.array(im.open("/home/phil/Dropbox/Uni_Bonn/ws1617/ImageProcessing/ImageProcessing/project 2/img/%s.jpg" % photo))
+    image = np.array(im.open("%s.jpg" % photo))
     h,w = image.shape
-    image1 = np.append(image,image[:,image.shape[1]-4:],axis=1)
-    image1 = np.append(image[:,:4],image1,axis=1)
-    image2 = np.append(image1, image1[(image1.shape[0] - 4):, :], axis=0)
-    image2 = np.append(image1[:4,:], image2 , axis=0)
-    yminus = image2.copy()
-    yplus = image2.copy()
-    y = np.zeros(image2.shape)
-    y.fill(255.0)
 
-    for k in np.arange(h)+4:
-        for n in np.arange(w)+4:
-            yplus[k,n] = sum([aplus[m] * image2[k,n-m] for m in range(4)]) -sum([bplus[m] * yplus[k,n-m] for m in range(1,5)])
-            yminus[k,n] =sum([aminus[m] * image2[k,n+m] for m in range(1,5)]) -\
-                    sum([bminus[m] * yminus[k,n+m] for m in range(1,5)])
-            y[k,n] = (yminus[k,n] + yplus[k,n])/(sigma *math.sqrt(2*math.pi))
-    y1 = y.copy()
-    for n in np.arange(w) + 4:
-        for k in np.arange(h)+4:
-            yplus[k,n] = sum([aplus[m] * y[k-m,n] for m in range(4)]) -sum([bplus[m] * yplus[k-m,n] for m in range(1,5)])
-            yminus[k,n] =sum([aminus[m] * y[k+m,n] for m in range(1,5)]) -\
-                    sum([bminus[m] * yminus[k+m,n] for m in range(1,5)])
-            y1[k,n] = (yminus[k,n] + yplus[k,n])/(sigma *math.sqrt(2*math.pi))
-    if False:
-        for n in np.arange(w) + 4:
-            for k in np.arange(h) + 4:
-                yplus[k, n] = sum([aplus[m] * y[k - m, n] for m in range(4)]) - sum(
-                    [bplus[m] * yplus[k - m, n] for m in range(1, 5)])
-                yminus[k, n] = sum([aminus[m] * y[k + m, n] for m in range(1, 5)]) - \
-                               sum([bminus[m] * yminus[k + m, n] for m in range(1, 5)])
-                y1[k, n] = (yminus[k, n] + yplus[k, n]) / (sigma * math.sqrt(2 * math.pi))
+    y = np.zeros(image.shape)
 
-        y1 = y.copy()
-        for k in np.arange(h) + 4:
-            for n in np.arange(w) + 4:
-                yplus[k, n] = sum([aplus[m] * y[k, n - m] for m in range(4)]) - sum(
-                    [bplus[m] * yplus[k, n - m] for m in range(1, 5)])
-                yminus[k, n] = sum([aminus[m] * y[k, n + m] for m in range(1, 5)]) - \
-                               sum([bminus[m] * yminus[k, n + m] for m in range(1, 5)])
-                y1[k, n] = (yminus[k, n] + yplus[k, n]) / (sigma * math.sqrt(2 * math.pi))
+    for i in range(h):
+        y[i,:] = (causal(image[i,:], aplus, bplus) + anticausal(image[i,:], aminus, bminus))/(sigma *math.sqrt(2*math.pi))
+    y1 = np.zeros(image.shape)
+    for k in range(w):
+         y1 [:,k]= (causal(y[:, k], aplus, bplus) + anticausal(y[:, k], aminus, bminus)) / (
+        sigma * math.sqrt(2 * math.pi))
 
     import scipy.misc as msc
+    from  scipy.ndimage.filters import gaussian_filter
+    im2 = msc.toimage(gaussian_filter(image, 2, mode='constant'))
 
+    y1 = y1*255/np.max(y1)
     im1 = msc.toimage(
         y1
     )
-    im1.show()
-    im1.save('task2.3/%s_sigma%s.jpg' % (photo,sigma))
+    im1.show(title="Recursive filter")
+    im2.show(title="Built-in scipy gaussian filter")
+    im1.save('%s_sigma%s.jpg' % (photo,sigma))
+    print(str(time.time() - startT) + " seconds")
 
-    if __name__ == '__main__':
-        for photo in ['bauckhage', 'phil','clock']:
-            for s in [0.2,0.8,1.2]:
-                main(s, photo=photo)
+if __name__ == '__main__':
+    import logging as log
+    log.info("Starting processing")
+
+    main(2, photo='bauckhage')
