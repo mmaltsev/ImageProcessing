@@ -12,3 +12,5 @@
  project 1 - http://slides.com/maximmaltsev/deck-1#/
  
  project 2 - http://slides.com/maximmaltsev/deck-d0f3a203-8f56-45fc-b71b-f975ef1454e2#/
+ 
+ project 3 - http://slides.com/maximmaltsev/deck-3#/

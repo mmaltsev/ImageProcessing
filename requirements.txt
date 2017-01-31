@@ -1,3 +1,6 @@
 Pillow
 numpy
 matplotlib
+scipy
+PIL
+math
