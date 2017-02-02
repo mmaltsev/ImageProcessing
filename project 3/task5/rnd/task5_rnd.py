@@ -171,7 +171,7 @@ plt.scatter(xyIn[:,0], xyIn[:,1])
 
 #fitting elipse
 import matplotlib.pyplot as plt
-
+import numpy as np
 from skimage import data, color
 from skimage.feature import canny
 from skimage.transform import hough_ellipse
@@ -181,8 +181,6 @@ from skimage.draw import ellipse_perimeter
 image_rgb = data.coffee()[0:220, 160:420]
 image_gray = color.rgb2gray(image_rgb)
 edges = canny(image_gray, sigma=2.0,
-              low_threshold=0.55, high_threshold=0.8)
-edges = canny(isle, sigma=2.0,
               low_threshold=0.55, high_threshold=0.8)
 
 # Perform a Hough Transform
@@ -200,11 +198,28 @@ orientation = best[5]
 
 # Draw the ellipse on the original image
 cy, cx = ellipse_perimeter(yc, xc, a, b, orientation)
+###
+xy = np.vstack((cy, cx)).T
+center = np.array([yc,xc])
+dists = np.sqrt(np.sum((xy - center)**2, axis=1))
+p1 = xy[np.argmin(dists)]
+p2 = xy[np.argmax(dists)]
+p3 = 2 * center - p1
+p4 = 2 * center - p2
+im = np.zeros((300,300))
+im[p1[0],p1[1]] =255
+im[p2[0],p2[1]] =255
+im[p3[0],p3[1]] =255
+im[p4[0],p4[1]] =255
+im[cy, cx] = 255
+im[yc, xc] = 255
+
+msc.toimage(image_gray*255).save('task5/fitted_elipse.jpg')
 image_rgb[cy, cx] = (0, 0, 255)
 # Draw the edge (white) and the resulting ellipse (red)
 edges = color.gray2rgb(edges)
 edges[cy, cx] = (250, 0, 0)
-
+#image_gray[cy, cx] = 0.
 fig2, (ax1, ax2) = plt.subplots(ncols=2, nrows=1, figsize=(8, 4), sharex=True, sharey=True, subplot_kw={'adjustable':'box-forced'})
 
 ax1.set_title('Original picture')
