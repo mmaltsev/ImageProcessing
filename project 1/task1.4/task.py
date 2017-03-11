@@ -1,7 +1,7 @@
 import numpy as np
 import math
 from matplotlib import pyplot as plt
-import numpy.fft as fft
+
 from pylab import imshow
 from PIL import Image as im
 from matplotlib import pyplot as plt
@@ -47,15 +47,23 @@ def getRI(im_fft):
     phases = vatan2(im_fft.imag , im_fft.real)
     return magnitudes, phases
 def main():
-    img = read_im("../img/bauckhage.jpg")
-    img1 = read_im("../img/clock.jpg")
+    img = read_im("img/bauckhage.jpg")
+    img1 = read_im("img/clock.jpg")
     #img1 = read_im("../img/lena.jpg")
-
     im_fft = fft.fft2(img)
     im_fft1 = fft.fft2(img1)
 
     mag, phases = getRI(im_fft)
     mag1,phases1 = getRI(im_fft1)
+    plt.imshow(np.log(fft.fftshift(mag1)), 'gray')
+    plt.savefig('task1.4/clock_magnitudeLogShift.jpg')
+    plt.imshow(np.log(fft.fftshift(phases1)), 'gray')
+    plt.savefig('task1.4/clock_phaseLogShift.jpg')
+
+    plt.imshow(np.log(fft.fftshift(mag)), 'gray')
+    plt.savefig('task1.4/prof_magnitudeLogShift.jpg')
+    plt.imshow(np.log(fft.fftshift(phases)), 'gray')
+    plt.savefig('task1.4/prof_phaseLogShift.jpg')
 
     im_fft = mag * np.cos(phases1) + 1j * mag * np.sin(phases1)
     im_fft1 = mag1 * np.cos(phases) + 1j * mag1 * np.sin(phases)
@@ -65,9 +73,9 @@ def main():
     im_new2 = fft.ifft2(mag1 * np.cos(phases1))
 
     plt.imshow(np.absolute(im_new),'gray')
-    plt.savefig('crossover11.jpg')
+    plt.savefig('clockphase.jpg')
     plt.imshow(np.absolute(im_new1),'gray')
-    plt.savefig('crossover12.jpg')
+    plt.savefig('profphase.jpg')
     plt.imshow(np.absolute(im_new2), 'gray')
     plt.savefig('lenaR.jpg')
 
