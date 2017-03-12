@@ -5,18 +5,24 @@ from PIL import Image as im
 def causal(line, aplus,bplus):
     yplus =  [0]*(len(line) + 4) #np.append(line[-4:], [0]*(len(line)))
     line = np.append([0]*4,line)
-    for n in range(4, len(line)-1) : #for evidence
-        yplus[n] = sum([aplus[m] * line[n-m] for m in range(4)]) -sum([bplus[m] * yplus[n-m] for m in range(1,5)])
-    return yplus[:-4:]
+
+    #line = np.pad(line, [4, 4], 'constant', constant_values=[0, 0])
+    #yplus =np.zeros_like(line)
+    for n in range(4, len(line)) : # -4 #for evidence
+        yplus[n] = np.dot(aplus[::-1] , line[n-3:n+1] ) - np.dot(bplus[1:][::-1], yplus[n-4:n-1+1])
+        #yplus[n] = sum([aplus[m] * line[n-m] for m in range(4)]) -np.sum([bplus[m] * yplus[n-m] for m in range(1,5)])
+    return yplus[4:]
 def anticausal(line, aminus, bminus):
     yminus =np.append( [0] * (len(line)) , line[:4])
     line =  np.append(line, [0] * 4)
-    for n in reversed(range(len(line)-4) ): #for evidence
-        yminus[n] = sum([aminus[m] * line[n + m] for m in range(1, 5)]) - \
-                sum([bminus[m] * yminus[n + m] for m in range(1, 5)])
+#    line = np.pad(line, [4, 4], 'constant', constant_values=[0, 0])
+#    yminus =np.zeros_like(line)
+    for n in range(len(line)-5,-1,-1 ) : #for evidence
+        yminus[n] = np.dot(aminus[1:] , line[n + 1:n+5]) - np.dot(bminus[1:], yminus[n+1:n+5])
+        #yminus[n] = sum([aminus[m] * line[n + m] for m in range(1, 5)]) -sum([bminus[m] * yminus[n + m] for m in range(1, 5)])
     return yminus[:-4:]
 
-def main(sigma = 2, photo ='phil'):
+def main(sigma = 4, photo ='phil'):
     import time
     startT=time.time()
     alfa = [1.68, -0.6803]
@@ -61,20 +67,21 @@ def main(sigma = 2, photo ='phil'):
 
     for i in range(h):
         y[i,:] = (causal(image[i,:], aplus, bplus) + anticausal(image[i,:], aminus, bminus))/(sigma *math.sqrt(2*math.pi))
-    y1 = np.zeros(image.shape)
+    y1 = np.zeros_like(image)
     for k in range(w):
          y1 [:,k]= (causal(y[:, k], aplus, bplus) + anticausal(y[:, k], aminus, bminus)) / (
         sigma * math.sqrt(2 * math.pi))
 
     import scipy.misc as msc
-    from  scipy.ndimage.filters import gaussian_filter
-    im2 = msc.toimage(gaussian_filter(image, 2, mode='constant'))
+    im1 = msc.toimage(y1)
+    print(str(time.time() - startT) + " seconds")
 
-    y1 = y1*255/np.max(y1)
-    im1 = msc.toimage(
-        y1
-    )
+#    from  scipy.ndimage.filters import gaussian_filter
+#    im2 = msc.toimage(gaussian_filter(image, 4, mode='constant'))
+
+#   y1 = y1*255/np.max(y1)
     im1.show(title="Recursive filter")
+
     im2.show(title="Built-in scipy gaussian filter")
     im1.save('%s_sigma%s.jpg' % (photo,sigma))
     print(str(time.time() - startT) + " seconds")
